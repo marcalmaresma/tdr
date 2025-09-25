@@ -9,10 +9,6 @@ q = 0
 with open("/Users/marcal/Desktop/TDR/tdr/Xifrat de Juli Cèsar/Dict.txt", "r", encoding="utf-8") as fitxer:
     diccionari = fitxer.read().splitlines()
 
-print(diccionari)
-if "casa" in diccionari:
-    print("Funciona")
-
 for x in range(1, 26):
     desplaçament = x
     for i in text:
@@ -60,26 +56,4 @@ for x in range(1, 26):
         text_desencriptat = ""
         f = True
         q = 0
-
-for i in text:
-    if i == " ":
-        text_desencriptat += " "
-    elif i.islower():
-        for z in abecedarim[::-1]:
-            if i != z:
-                position += 1
-            else:
-                text_desencriptat += abecedarim[(len(abecedarim)-1 - position - desplaçament) % 26]
-                position = 0
-                break
-    elif i.isupper():
-        for z in abecedari[::-1]:
-            if i != z:
-                position += 1
-            else:
-                text_desencriptat += abecedari[(len(abecedari)-1 - position - desplaçament) % 26]
-                position = 0
-                break
-    else:
-        text_desencriptat += i
 print("Text desencriptat:", text_desencriptat)
