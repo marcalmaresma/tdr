@@ -56,4 +56,7 @@ for x in range(1, 26):
         text_desencriptat = ""
         f = True
         q = 0
-print("Text desencriptat:", text_desencriptat)
+if text_desencriptat == "":
+    print("Aquest text no és correcte")
+else:
+    print("Text desencriptat:", text_desencriptat)
