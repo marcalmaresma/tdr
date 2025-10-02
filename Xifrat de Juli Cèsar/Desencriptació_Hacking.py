@@ -1,3 +1,5 @@
+import unicodedata
+
 text = input("Introdueix el text a desencriptar (sense accents): ")
 desplaçament = 0
 abecedarim = "abcdefghijklmnopqrstuvwxyz"
@@ -7,7 +9,12 @@ text_desencriptat = ""
 f = True
 q = 0
 with open("/Users/marcal/Desktop/TDR/tdr/Xifrat de Juli Cèsar/Dict.txt", "r", encoding="utf-8") as fitxer:
-    diccionari = fitxer.read().splitlines()
+    dict = fitxer.read().splitlines()
+diccionari = [
+    ''.join(c for c in unicodedata.normalize('NFD', paraula) 
+            if unicodedata.category(c) != 'Mn')
+    for paraula in dict
+]
 
 for x in range(1, 26):
     desplaçament = x
