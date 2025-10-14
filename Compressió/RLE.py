@@ -28,12 +28,10 @@ if opcio == "1":
     resultat += str(comptador) + lletra_anterior
 
     print("Text comprimit:", resultat)
-    exit()
 elif opcio == "2":
     text_comprimit = input("Introdueix el text comprimit: ")
     if not text_comprimit:
         print("Text buit!")
-        exit()
 
     resultat = ""
     numero = ""
@@ -45,20 +43,15 @@ elif opcio == "2":
         else:
             if not numero:
                 print("Format invàlid: falta nombre abans del caràcter")
-                exit()
             try:
                 resultat += caracter * int(numero)
             except ValueError:
                 print("Nombre invàlid a la cadena comprimida")
-                exit()
             numero = ""
 
     if numero:
         print("Format invàlid: cadena acaba amb número sols")
-        exit()
 
     print("Text descomprimit:", resultat)
-    exit()
 else:
     print("Opció no vàlida, torna-ho a provar.")
-    exit()
