@@ -57,7 +57,7 @@ else:
         else:
             stack.append((right, codi + "1"))
 
-print(assignacions)
+print("Arbre de Huffman:", assignacions)
 comprimit = ""
 for i in text:
     comprimit += assignacions[i]
