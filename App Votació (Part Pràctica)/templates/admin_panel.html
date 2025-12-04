@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panell d'Administració</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1>Panell d'Administració</h1>
+            <button onclick="logout()" class="btn btn-secondary">Tancar Sessió</button>
+        </div>
+        
+        <div id="alert-container"></div>
+        
+        <div style="margin-bottom: 30px;">
+            <button onclick="window.location.href='/admin/polls/new'" class="btn btn-success">
+                ➕ Crear Nova Votació
+            </button>
+        </div>
+        
+        <h2>Les Meves Votacions</h2>
+        <div id="polls-container">
+            <div class="empty-state">
+                <p>Carregant votacions...</p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/admin_panel.js') }}"></script>
+</body>
+</html>
+

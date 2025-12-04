@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Administrador</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-link">← Tornar a l'inici</a>
+        <h1>Login Administrador</h1>
+        
+        <div id="alert-container"></div>
+        
+        <form id="login-form">
+            <div class="form-group">
+                <label for="compte">Compte:</label>
+                <input type="text" id="compte" name="compte" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="contrasenya">Contrasenya:</label>
+                <input type="password" id="contrasenya" name="contrasenya" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">Iniciar Sessió</button>
+        </form>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/admin_login.js') }}"></script>
+</body>
+</html>
+

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultats de la Votació</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <a href="/admin/panel" class="back-link">← Tornar al panell</a>
+        <h1>Resultats de la Votació</h1>
+        
+        <div id="alert-container"></div>
+        <div id="poll-info"></div>
+        <div id="results-container"></div>
+        <div id="votes-container"></div>
+    </div>
+    
+    <script>
+        const pollId = {{ poll_id }};
+    </script>
+    <script src="{{ url_for('static', filename='js/poll_results.js') }}"></script>
+</body>
+</html>
+

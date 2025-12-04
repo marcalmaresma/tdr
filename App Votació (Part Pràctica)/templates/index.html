@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Votacions</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>🏛️ Sistema de Votacions</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 30px;">
+            Selecciona el teu rol per continuar
+        </p>
+        
+        <div class="role-selection">
+            <div class="role-card" onclick="window.location.href='/admin/login'">
+                <h3>👤 Administrador</h3>
+                <p>Gestiona votacions i veu resultats</p>
+            </div>
+            
+            <div class="role-card" onclick="window.location.href='/voter/login'">
+                <h3>🗳️ Votant</h3>
+                <p>Accedeix amb el teu DNI i codi de votació</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
