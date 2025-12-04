@@ -46,6 +46,22 @@ h2 {
     font-size: 1.5em;
 }
 
+#poll-info {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+#poll-info h2 {
+    color: #333;
+}
+
+#poll-info p {
+    color: #555;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
 .form-group {
     margin-bottom: 20px;
 }
@@ -148,6 +164,7 @@ textarea {
     cursor: pointer;
     transition: all 0.3s;
     background: white;
+    color: #333;
 }
 
 .role-card:hover {
@@ -159,6 +176,11 @@ textarea {
 .role-card h3 {
     color: #667eea;
     margin-bottom: 10px;
+}
+
+.role-card p {
+    color: #555;
+    margin-top: 10px;
 }
 
 .alert {
