@@ -40,6 +40,9 @@ function displayPolls(polls) {
                 <button onclick="viewResults(${poll.id})" class="btn btn-primary">
                     Veure Resultats
                 </button>
+                <button onclick="deletePoll(${poll.id}, '${escapeHtml(poll.titol)}')" class="btn btn-danger">
+                    🗑️ Eliminar
+                </button>
             </div>
         `;
         list.appendChild(item);
@@ -48,6 +51,32 @@ function displayPolls(polls) {
 
 function viewResults(pollId) {
     window.location.href = `/admin/polls/${pollId}`;
+}
+
+async function deletePoll(pollId, pollTitle) {
+    if (!confirm(`Estàs segur que vols eliminar la votació "${pollTitle}"?\n\nAquesta acció no es pot desfer i s'eliminaran tots els vots associats.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/admin/polls/${pollId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert('Votació eliminada correctament', 'success');
+            // Recarregar la llista de votacions
+            setTimeout(() => {
+                loadPolls();
+            }, 1000);
+        } else {
+            showAlert(data.error || 'Error eliminant la votació', 'error');
+        }
+    } catch (error) {
+        showAlert('Error de connexió', 'error');
+    }
 }
 
 async function logout() {

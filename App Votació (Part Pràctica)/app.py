@@ -209,6 +209,37 @@ def get_poll_details(poll_id):
         }
     })
 
+@app.route('/api/admin/polls/<int:poll_id>', methods=['DELETE'])
+def delete_poll(poll_id):
+    """Eliminar una votació"""
+    if 'admin_id' not in session:
+        return jsonify({'error': 'No autenticat'}), 401
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # Verificar que la votació pertany a l'admin
+    cursor.execute('''
+        SELECT id FROM votacions
+        WHERE id = ? AND administrador_id = ?
+    ''', (poll_id, session['admin_id']))
+    
+    if not cursor.fetchone():
+        conn.close()
+        return jsonify({'error': 'Votació no trobada'}), 404
+    
+    try:
+        # Eliminar la votació (els vots i opcions s'eliminaran en cascada per les foreign keys)
+        cursor.execute('DELETE FROM votacions WHERE id = ?', (poll_id,))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Votació eliminada correctament'})
+    except Exception as e:
+        conn.rollback()
+        conn.close()
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/admin/polls/<int:poll_id>/results', methods=['GET'])
 def get_poll_results(poll_id):
     """Obtenir resultats d'una votació"""

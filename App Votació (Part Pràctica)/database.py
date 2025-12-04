@@ -9,6 +9,8 @@ def get_db():
     """Obtenir connexió a la base de dades"""
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
+    # Activar foreign keys per SQLite
+    conn.execute('PRAGMA foreign_keys = ON')
     return conn
 
 def init_db():
@@ -48,6 +50,9 @@ def init_db():
         )
     ''')
     
+    # Activar foreign keys per SQLite
+    cursor.execute('PRAGMA foreign_keys = ON')
+    
     # Taula de vots
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS vots (
@@ -57,8 +62,8 @@ def init_db():
             dni_votant TEXT NOT NULL,
             nom_votant TEXT NOT NULL,
             data_vot TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (votacio_id) REFERENCES votacions(id),
-            FOREIGN KEY (opcio_id) REFERENCES opcions(id)
+            FOREIGN KEY (votacio_id) REFERENCES votacions(id) ON DELETE CASCADE,
+            FOREIGN KEY (opcio_id) REFERENCES opcions(id) ON DELETE CASCADE
         )
     ''')
     
