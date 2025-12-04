@@ -228,22 +228,36 @@ def get_poll_results(poll_id):
         conn.close()
         return jsonify({'error': 'Votació no trobada'}), 404
     
-    # Obtenir recompte de vots per opció
+    # Obtenir totes les opcions de la votació
     cursor.execute('''
-        SELECT o.id, o.text_opcio, COUNT(v.id) as num_vots
-        FROM opcions o
-        LEFT JOIN vots v ON o.id = v.opcio_id
-        WHERE o.votacio_id = ?
-        GROUP BY o.id, o.text_opcio
-        ORDER BY o.id
+        SELECT id, text_opcio
+        FROM opcions
+        WHERE votacio_id = ?
+        ORDER BY id
     ''', (poll_id,))
     
+    opcions = cursor.fetchall()
     results = []
-    for row in cursor.fetchall():
+    
+    # Per cada opció, comptar els vots
+    for opcio in opcions:
+        opcio_id = opcio['id']
+        text_opcio = opcio['text_opcio']
+        
+        # Comptar vots per aquesta opció
+        cursor.execute('''
+            SELECT COUNT(*) as num_vots
+            FROM vots
+            WHERE opcio_id = ? AND votacio_id = ?
+        ''', (opcio_id, poll_id))
+        
+        count_row = cursor.fetchone()
+        num_vots = int(count_row['num_vots']) if count_row and count_row['num_vots'] is not None else 0
+        
         results.append({
-            'opcio_id': row['id'],
-            'text_opcio': row['text_opcio'],
-            'num_vots': row['num_vots']
+            'opcio_id': int(opcio_id),
+            'text_opcio': str(text_opcio),
+            'num_vots': num_vots
         })
     
     # Obtenir llista de vots individuals

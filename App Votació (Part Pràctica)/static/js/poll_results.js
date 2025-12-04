@@ -26,44 +26,74 @@ function displayPollInfo(poll) {
 async function loadResults() {
     try {
         const response = await fetch(`/api/admin/polls/${pollId}/results`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         if (data.success) {
-            displayResults(data.results);
-            displayVotes(data.votes);
+            // Assegurar que results i votes són arrays
+            const results = Array.isArray(data.results) ? data.results : [];
+            const votes = Array.isArray(data.votes) ? data.votes : [];
+            
+            console.log('Resultats rebuts:', results);
+            console.log('Nombre de resultats:', results.length);
+            
+            displayResults(results);
+            displayVotes(votes);
         } else {
-            showAlert('Error carregant resultats', 'error');
+            showAlert('Error carregant resultats: ' + (data.error || 'Desconegut'), 'error');
         }
     } catch (error) {
-        showAlert('Error de connexió', 'error');
+        console.error('Error carregant resultats:', error);
+        showAlert('Error de connexió: ' + error.message, 'error');
     }
 }
 
 function displayResults(results) {
     const container = document.getElementById('results-container');
     
-    if (results.length === 0) {
-        container.innerHTML = '<p>Encara no hi ha resultats.</p>';
+    // Assegurar que results és un array
+    if (!Array.isArray(results)) {
+        container.innerHTML = '<h2>Recompte de Vots</h2><p class="alert alert-error">Error: Dades de resultats no vàlides.</p>';
         return;
     }
     
-    const totalVots = results.reduce((sum, r) => sum + r.num_vots, 0);
+    if (results.length === 0) {
+        container.innerHTML = '<h2>Recompte de Vots</h2><p>Encara no hi ha opcions configurades per a aquesta votació.</p>';
+        return;
+    }
+    
+    // Assegurar-nos que num_vots és un número
+    const totalVots = results.reduce((sum, r) => {
+        const vots = parseInt(r.num_vots) || 0;
+        return sum + vots;
+    }, 0);
     
     let html = '<h2>Recompte de Vots</h2>';
     html += '<table class="results-table">';
     html += '<thead><tr><th>Opció</th><th>Vots</th><th>Percentatge</th></tr></thead>';
     html += '<tbody>';
     
-    results.forEach(result => {
-        const percentatge = totalVots > 0 ? ((result.num_vots / totalVots) * 100).toFixed(1) : 0;
+    // Iterar sobre cada resultat i crear una fila
+    for (let i = 0; i < results.length; i++) {
+        const result = results[i];
+        if (!result) continue;
+        
+        const numVots = parseInt(result.num_vots) || 0;
+        const textOpcio = result.text_opcio || 'Opció sense nom';
+        const percentatge = totalVots > 0 ? ((numVots / totalVots) * 100).toFixed(1) : '0.0';
+        
         html += `
             <tr>
-                <td>${escapeHtml(result.text_opcio)}</td>
-                <td>${result.num_vots}</td>
+                <td>${escapeHtml(textOpcio)}</td>
+                <td>${numVots}</td>
                 <td>${percentatge}%</td>
             </tr>
         `;
-    });
+    }
     
     html += '</tbody></table>';
     html += `<p><strong>Total de vots: ${totalVots}</strong></p>`;
@@ -80,17 +110,22 @@ function displayVotes(votes) {
     }
     
     let html = '<div class="votes-list"><h2>Vots Individuals</h2>';
+    html += '<table class="results-table">';
+    html += '<thead><tr><th>Nom</th><th>DNI</th><th>Vot</th><th>Data</th></tr></thead>';
+    html += '<tbody>';
     
     votes.forEach(vote => {
         html += `
-            <div class="vote-item">
-                <strong>${escapeHtml(vote.nom_votant)}</strong> (DNI: ${escapeHtml(vote.dni_votant)})<br>
-                Vot: ${escapeHtml(vote.opcio)}<br>
-                <small>Data: ${vote.data_vot}</small>
-            </div>
+            <tr>
+                <td><strong>${escapeHtml(vote.nom_votant)}</strong></td>
+                <td>${escapeHtml(vote.dni_votant)}</td>
+                <td>${escapeHtml(vote.opcio)}</td>
+                <td><small>${vote.data_vot}</small></td>
+            </tr>
         `;
     });
     
+    html += '</tbody></table>';
     html += '</div>';
     container.innerHTML = html;
 }

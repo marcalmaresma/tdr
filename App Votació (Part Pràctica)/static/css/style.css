@@ -235,6 +235,7 @@ textarea {
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid #ddd;
+    color: #333;
 }
 
 .results-table th {
@@ -243,8 +244,18 @@ textarea {
     font-weight: 600;
 }
 
+.results-table td {
+    background: white;
+    color: #333;
+}
+
 .results-table tr:hover {
     background: #f8f9fa;
+}
+
+.results-table tr:hover td {
+    background: #f8f9fa;
+    color: #333;
 }
 
 .votes-list {
@@ -257,10 +268,16 @@ textarea {
     border-radius: 5px;
     margin-bottom: 10px;
     border-left: 4px solid #667eea;
+    color: #333;
 }
 
 .vote-item strong {
     color: #333;
+}
+
+.vote-item p,
+.vote-item small {
+    color: #555;
 }
 
 .back-link {
