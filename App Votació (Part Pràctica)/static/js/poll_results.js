@@ -16,9 +16,11 @@ async function loadPollDetails() {
 
 function displayPollInfo(poll) {
     const container = document.getElementById('poll-info');
+    const endTimeHtml = poll.end_time ? `<p><strong>Termini:</strong> ${formatDateTime(poll.end_time)}</p>` : '';
     container.innerHTML = `
         <h2>${escapeHtml(poll.titol)}</h2>
         ${poll.descripcio ? `<p>${escapeHtml(poll.descripcio)}</p>` : ''}
+        ${endTimeHtml}
         <div class="code" style="margin: 15px 0;">Codi de Votació: ${escapeHtml(poll.codi_votacio)}</div>
     `;
 }
@@ -120,7 +122,7 @@ function displayVotes(votes) {
                 <td><strong>${escapeHtml(vote.nom_votant)}</strong></td>
                 <td>${escapeHtml(vote.dni_votant)}</td>
                 <td>${escapeHtml(vote.opcio)}</td>
-                <td><small>${vote.data_vot}</small></td>
+                <td><small>${formatDateTime(vote.data_vot)}</small></td>
             </tr>
         `;
     });
@@ -139,6 +141,23 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function formatDateTime(isoString) {
+    if (!isoString) return '';
+    try {
+        const normalized = isoString.replace(' ', 'T');
+        const d = new Date(normalized);
+        if (isNaN(d)) return isoString;
+        const dd = String(d.getDate()).padStart(2, '0');
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const yyyy = d.getFullYear();
+        const hh = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        return `${dd}-${mm}-${yyyy}, ${hh}:${min}`;
+    } catch (e) {
+        return isoString;
+    }
 }
 
 // Carregar dades quan es carrega la pàgina

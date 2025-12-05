@@ -96,7 +96,7 @@ def get_admin_polls():
     cursor = conn.cursor()
     
     cursor.execute('''
-        SELECT id, titol, descripcio, codi_votacio, data_creacio
+        SELECT id, titol, descripcio, codi_votacio, data_creacio, end_time
         FROM votacions
         WHERE administrador_id = ?
         ORDER BY data_creacio DESC
@@ -109,7 +109,8 @@ def get_admin_polls():
             'titol': row['titol'],
             'descripcio': row['descripcio'],
             'codi_votacio': row['codi_votacio'],
-            'data_creacio': row['data_creacio']
+            'data_creacio': row['data_creacio'],
+            'end_time': row['end_time']
         })
     
     conn.close()
@@ -125,6 +126,7 @@ def create_poll():
     titol = data.get('titol')
     descripcio = data.get('descripcio', '')
     opcions = data.get('opcions', [])
+    end_time = data.get('end_time')  # ISO string o buit
     
     if not titol or not opcions:
         return jsonify({'error': 'Títol i opcions són obligatoris'}), 400
@@ -138,9 +140,9 @@ def create_poll():
     try:
         # Crear votació
         cursor.execute('''
-            INSERT INTO votacions (titol, descripcio, codi_votacio, administrador_id)
-            VALUES (?, ?, ?, ?)
-        ''', (titol, descripcio, codi_votacio, admin_id))
+            INSERT INTO votacions (titol, descripcio, codi_votacio, end_time, administrador_id)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (titol, descripcio, codi_votacio, end_time, admin_id))
         
         poll_id = cursor.lastrowid
         
@@ -158,6 +160,7 @@ def create_poll():
             'success': True,
             'poll_id': poll_id,
             'codi_votacio': codi_votacio,
+            'end_time': end_time,
             'message': 'Votació creada correctament'
         })
     except Exception as e:
@@ -176,7 +179,7 @@ def get_poll_details(poll_id):
     
     # Obtenir votació
     cursor.execute('''
-        SELECT id, titol, descripcio, codi_votacio, data_creacio
+        SELECT id, titol, descripcio, codi_votacio, data_creacio, end_time
         FROM votacions
         WHERE id = ? AND administrador_id = ?
     ''', (poll_id, session['admin_id']))
@@ -205,6 +208,7 @@ def get_poll_details(poll_id):
             'descripcio': poll['descripcio'],
             'codi_votacio': poll['codi_votacio'],
             'data_creacio': poll['data_creacio'],
+            'end_time': poll['end_time'],
             'opcions': opcions
         }
     })
@@ -346,7 +350,7 @@ def get_poll_by_code(code):
     cursor = conn.cursor()
     
     cursor.execute('''
-        SELECT id, titol, descripcio, codi_votacio
+        SELECT id, titol, descripcio, codi_votacio, end_time
         FROM votacions
         WHERE codi_votacio = ?
     ''', (code,))
@@ -374,6 +378,7 @@ def get_poll_by_code(code):
             'titol': poll['titol'],
             'descripcio': poll['descripcio'],
             'codi_votacio': poll['codi_votacio'],
+            'end_time': poll['end_time'],
             'opcions': opcions
         }
     })
@@ -393,8 +398,8 @@ def submit_vote():
     conn = get_db()
     cursor = conn.cursor()
     
-    # Obtenir ID de la votació
-    cursor.execute('SELECT id FROM votacions WHERE codi_votacio = ?', (codi_votacio,))
+    # Obtenir ID de la votació i el seu termini
+    cursor.execute('SELECT id, end_time FROM votacions WHERE codi_votacio = ?', (codi_votacio,))
     poll = cursor.fetchone()
     
     if not poll:
@@ -402,6 +407,19 @@ def submit_vote():
         return jsonify({'error': 'Votació no trobada'}), 404
     
     poll_id = poll['id']
+    end_time = poll['end_time']
+
+    # Si hi ha termini i ja ha passat, no permetre votar
+    if end_time:
+        try:
+            end_dt = datetime.fromisoformat(end_time)
+            if datetime.now() > end_dt:
+                conn.close()
+                return jsonify({'error': 'La votació ja ha finalitzat'}), 400
+        except Exception:
+            # Si el format és invàlid, permetre però avisar d'error de dades
+            conn.close()
+            return jsonify({'error': 'Error amb el termini de la votació'}), 400
     
     # Verificar que l'opció pertany a la votació
     cursor.execute('''

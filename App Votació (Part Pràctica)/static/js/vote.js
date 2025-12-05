@@ -36,6 +36,7 @@ function displayPoll() {
     infoContainer.innerHTML = `
         <h2>${escapeHtml(pollData.titol)}</h2>
         ${pollData.descripcio ? `<p>${escapeHtml(pollData.descripcio)}</p>` : ''}
+        ${pollData.end_time ? `<p><strong>Termini:</strong> ${formatDateTime(pollData.end_time)}</p>` : ''}
     `;
     
     let formHtml = '<form id="vote-form">';
@@ -115,6 +116,23 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function formatDateTime(isoString) {
+    if (!isoString) return '';
+    try {
+        const normalized = isoString.replace(' ', 'T');
+        const d = new Date(normalized);
+        if (isNaN(d)) return isoString;
+        const dd = String(d.getDate()).padStart(2, '0');
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const yyyy = d.getFullYear();
+        const hh = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        return `${dd}-${mm}-${yyyy}, ${hh}:${min}`;
+    } catch (e) {
+        return isoString;
+    }
 }
 
 // Carregar votació quan es carrega la pàgina

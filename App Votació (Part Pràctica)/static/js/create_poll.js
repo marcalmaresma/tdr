@@ -40,6 +40,8 @@ document.getElementById('create-poll-form').addEventListener('submit', async (e)
     
     const titol = document.getElementById('titol').value.trim();
     const descripcio = document.getElementById('descripcio').value.trim();
+    const end_time_raw = document.getElementById('end_time').value;
+    const end_time = end_time_raw ? end_time_raw : null;
     
     const optionInputs = document.querySelectorAll('.option-input');
     const opcions = Array.from(optionInputs)
@@ -60,7 +62,8 @@ document.getElementById('create-poll-form').addEventListener('submit', async (e)
             body: JSON.stringify({
                 titol,
                 descripcio,
-                opcions
+                opcions,
+                end_time
             })
         });
         

@@ -32,10 +32,12 @@ function displayPolls(polls) {
     polls.forEach(poll => {
         const item = document.createElement('li');
         item.className = 'poll-item';
+        const endTime = poll.end_time ? `<div style="color:#555;">Termini: ${formatDateTime(poll.end_time)}</div>` : '';
         item.innerHTML = `
             <h3>${escapeHtml(poll.titol)}</h3>
             ${poll.descripcio ? `<p>${escapeHtml(poll.descripcio)}</p>` : ''}
             <div class="code">Codi: ${escapeHtml(poll.codi_votacio)}</div>
+            ${endTime}
             <div class="poll-actions">
                 <button onclick="viewResults(${poll.id})" class="btn btn-primary">
                     Veure Resultats
@@ -100,6 +102,23 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function formatDateTime(isoString) {
+    if (!isoString) return '';
+    try {
+        const normalized = isoString.replace(' ', 'T');
+        const d = new Date(normalized);
+        if (isNaN(d)) return isoString;
+        const dd = String(d.getDate()).padStart(2, '0');
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const yyyy = d.getFullYear();
+        const hh = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        return `${dd}-${mm}-${yyyy}, ${hh}:${min}`;
+    } catch (e) {
+        return isoString;
+    }
 }
 
 // Carregar votacions quan es carrega la pàgina

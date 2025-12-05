@@ -35,10 +35,17 @@ def init_db():
             descripcio TEXT,
             codi_votacio TEXT UNIQUE NOT NULL,
             data_creacio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            end_time TEXT,
             administrador_id INTEGER NOT NULL,
             FOREIGN KEY (administrador_id) REFERENCES administradors(id)
         )
     ''')
+
+    # Afegir columna end_time si no existeix (compatibilitat amb bases de dades creades abans)
+    cursor.execute("PRAGMA table_info(votacions)")
+    columns = [row["name"] for row in cursor.fetchall()]
+    if "end_time" not in columns:
+        cursor.execute("ALTER TABLE votacions ADD COLUMN end_time TEXT")
     
     # Taula d'opcions
     cursor.execute('''
@@ -49,9 +56,6 @@ def init_db():
             FOREIGN KEY (votacio_id) REFERENCES votacions(id) ON DELETE CASCADE
         )
     ''')
-    
-    # Activar foreign keys per SQLite
-    cursor.execute('PRAGMA foreign_keys = ON')
     
     # Taula de vots
     cursor.execute('''
