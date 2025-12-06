@@ -1,3 +1,18 @@
+// Comprovar si hi ha hagut un error de DNI i mostrar missatge
+window.addEventListener('DOMContentLoaded', () => {
+    if (sessionStorage.getItem('dni_error') === 'true') {
+        showAlert('DNI incorrecte. Si us plau, introdueix un DNI vàlid.', 'error');
+        // Esborrar el camp DNI
+        const dniInput = document.getElementById('dni');
+        if (dniInput) {
+            dniInput.value = '';
+            dniInput.focus();
+        }
+        // Netejar el flag d'error
+        sessionStorage.removeItem('dni_error');
+    }
+});
+
 document.getElementById('voter-login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -17,13 +32,25 @@ document.getElementById('voter-login-form').addEventListener('submit', async (e)
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ code: codi_votacio })
+            body: JSON.stringify({ code: codi_votacio, dni: dni })
         });
         
         const verifyData = await verifyResponse.json();
-        
+        console.log(verifyData);
         if (!verifyData.exists) {
-            showAlert('Codi de votació no vàlid', 'error');
+            if (verifyData.error == 'Codi de votació no trobat i DNI incorrecte') {
+                showAlert('Codi de votació no trobat i DNI incorrecte. Si us plau, introdueix un codi de votació vàlid i un DNI vàlid.', 'error');
+                return;
+            }
+            if (verifyData.error == 'DNI incorrecte') {
+                showAlert('DNI incorrecte. Si us plau, introdueix un DNI vàlid.', 'error');
+                return;
+            }
+            if (verifyData.error == 'Codi de votació no trobat') {
+                showAlert('Codi de votació no trobat. Si us plau, introdueix un codi de votació vàlid.', 'error');
+                return;
+            }
+            showAlert(verifyData.error, 'error');
             return;
         }
         

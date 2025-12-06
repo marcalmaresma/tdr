@@ -100,7 +100,20 @@ async function handleVote(e) {
                 window.location.href = '/';
             }, 3000);
         } else {
-            showAlert(data.error || 'Error registrant el vot', 'error');
+            // Si l'error és de DNI incorrecte, netejar sessionStorage i redirigir al login
+            if (data.error && data.error.includes('DNI incorrecte')) {
+                showAlert('DNI incorrecte. Si us plau, introdueix un DNI vàlid.', 'error');
+                // Marcar que hi ha hagut un error de DNI
+                sessionStorage.setItem('dni_error', 'true');
+                sessionStorage.removeItem('voter_dni');
+                sessionStorage.removeItem('voter_nom');
+                sessionStorage.removeItem('voter_codi');
+                setTimeout(() => {
+                    window.location.href = '/voter/login';
+                }, 2000);
+            } else {
+                showAlert(data.error || 'Error registrant el vot', 'error');
+            }
         }
     } catch (error) {
         showAlert('Error de connexió', 'error');

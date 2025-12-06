@@ -316,15 +316,26 @@ textarea {
 }
 
 .back-link {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     margin-bottom: 20px;
     color: #667eea;
     text-decoration: none;
     font-weight: 600;
+    font-size: 1.1em;
+    transition: all 0.3s;
 }
 
 .back-link:hover {
     text-decoration: underline;
+    color: #5568d3;
+    transform: translateX(-3px);
+}
+
+.back-link::before {
+    content: "←";
+    margin-right: 8px;
+    font-size: 1.2em;
 }
 
 .radio-options {
