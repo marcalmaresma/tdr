@@ -36,9 +36,35 @@ function displayPoll() {
     infoContainer.innerHTML = `
         <h2>${escapeHtml(pollData.titol)}</h2>
         ${pollData.descripcio ? `<p>${escapeHtml(pollData.descripcio)}</p>` : ''}
-        ${pollData.end_time ? `<p><strong>Termini:</strong> ${formatDateTime(pollData.end_time)}</p>` : ''}
+        ${pollData.end_time ? `<p style="color: #666;"><strong>Termini:</strong> ${formatDateTime(pollData.end_time)}</p>` : ''}
     `;
     
+    // Comprovar si la votació ha acabat
+    if (pollData.is_expired) {
+        formContainer.innerHTML = `
+            <div class="alert alert-error" style="margin-top: 20px;">
+                <strong>Votació finalitzada</strong><br>
+                El termini per votar en aquesta votació ja ha acabat.
+            </div>
+            <div style="margin-top: 30px;">
+                <h3 style="color: #555; margin-bottom: 15px;">Opcions de la votació:</h3>
+                <div class="radio-options">
+                    ${pollData.opcions.map(opcio => `
+                        <div class="radio-option" style="background: #f0f0f0; cursor: default; opacity: 0.7;">
+                            <input type="radio" disabled>
+                            <label style="cursor: default;">${escapeHtml(opcio.text)}</label>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            <button onclick="window.location.href='/'" class="btn btn-primary btn-block" style="margin-top: 30px;">
+                Tornar a l'Inici
+            </button>
+        `;
+        return;
+    }
+    
+    // Si la votació està activa, mostrar formulari normal
     let formHtml = '<form id="vote-form">';
     formHtml += '<div class="radio-options">';
     

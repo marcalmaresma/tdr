@@ -327,20 +327,9 @@ def verify_votacio_code():
     """Verificar que un codi de votació existeix"""
     data = request.json
     code = data.get('code')
-    dni = data.get('dni')
-    print(code)
-    print(dni)
-
-    dni_TF = False
-    a = dni
-    dni_letters = "TRWAGMYFPDXBNJZSQVHLCKE"                  #Assigno les lletres amb la posició concordant amb el nombre que els hi toqui
-    if len(a) != 9:                                   #Els dnis consten de 9 caràcters, 8 nombres i 1 lletra, per tant si el dni introduit conté un nombre diferent a 9 de caràcters és incorrecte
-        dni_TF = False
-    else:
-        if dni_letters[int(a[0:8])%23] == a[8].upper():       #Calculo la lletra que obtenim del nombre i si coincideix amb la que s'ha introduit és correcte
-            dni_TF = True
-        else:                                         #Si en canvi no coincideix mostro la lletra que correspon al nombre
-            dni_TF = False
+    
+    if not code:
+        return jsonify({'error': 'Codi requerit'}), 400
     
     conn = get_db()
     cursor = conn.cursor()
@@ -348,23 +337,11 @@ def verify_votacio_code():
     
     poll = cursor.fetchone()
     conn.close()
-
-    if not dni_TF and not poll:
-        return jsonify({'error': 'Codi de votació no trobat i DNI incorrecte'}), 400
-
-    if not dni_TF:
-        return jsonify({'error': 'DNI incorrecte'}), 400
-
-    code = code.upper()
-    if not code:
-        return jsonify({'error': 'Codi requerit'}), 400
     
     if poll:
         return jsonify({'success': True, 'exists': True})
     else:
-        return jsonify({'error': 'Codi de votació no trobat'}), 400
-
-        # return jsonify({'success': True, 'exists': False})
+        return jsonify({'success': True, 'exists': False})
 
 @app.route('/api/voter/poll/<code>', methods=['GET'])
 def get_poll_by_code(code):
@@ -382,6 +359,17 @@ def get_poll_by_code(code):
     if not poll:
         conn.close()
         return jsonify({'error': 'Votació no trobada'}), 404
+    
+    # Comprovar si la votació ha acabat
+    is_expired = False
+    end_time = poll['end_time']
+    if end_time:
+        try:
+            end_dt = datetime.fromisoformat(end_time)
+            if datetime.now() > end_dt:
+                is_expired = True
+        except:
+            pass
     
     # Obtenir opcions
     cursor.execute('''
@@ -402,6 +390,7 @@ def get_poll_by_code(code):
             'descripcio': poll['descripcio'],
             'codi_votacio': poll['codi_votacio'],
             'end_time': poll['end_time'],
+            'is_expired': is_expired,
             'opcions': opcions
         }
     })
@@ -415,6 +404,29 @@ def submit_vote():
     nom_votant = data.get('nom_votant')
     opcio_id = data.get('opcio_id')
     
+    dni_TF = False
+    
+    # Validar DNI amb el teu codi
+    if dni_votant:
+        a = dni_votant
+        dni = "TRWAGMYFPDXBNJZSQVHLCKE"                  #Assigno les lletres amb la posició concordant amb el nombre que els hi toqui
+        if len(a) != 9:                                   #Els dnis consten de 9 caràcters, 8 nombres i 1 lletra, per tant si el dni introduit conté un nombre diferent a 9 de caràcters és incorrecte
+            dni_TF = False
+        else:
+            try:
+                if dni[int(a[0:8])%23] == a[8].upper():       #Calculo la lletra que obtenim del nombre i si coincideix amb la que s'ha introduit és correcte
+                    dni_TF = True
+                else:                                         #Si en canvi no coincideix mostro la lletra que correspon al nombre
+                    dni_TF = False
+            except (ValueError, IndexError):
+                dni_TF = False
+    else:
+        dni_TF = False
+
+    # Validar DNI - si és incorrecte, retornar error
+    if dni_TF == False:
+        return jsonify({'error': 'DNI incorrecte', 'success': False}), 400
+
     if not all([codi_votacio, dni_votant, nom_votant, opcio_id]):
         return jsonify({'error': 'Falten dades'}), 400
     

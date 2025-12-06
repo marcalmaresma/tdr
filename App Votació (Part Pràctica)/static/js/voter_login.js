@@ -32,25 +32,13 @@ document.getElementById('voter-login-form').addEventListener('submit', async (e)
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ code: codi_votacio, dni: dni })
+            body: JSON.stringify({ code: codi_votacio })
         });
         
         const verifyData = await verifyResponse.json();
-        console.log(verifyData);
+        
         if (!verifyData.exists) {
-            if (verifyData.error == 'Codi de votació no trobat i DNI incorrecte') {
-                showAlert('Codi de votació no trobat i DNI incorrecte. Si us plau, introdueix un codi de votació vàlid i un DNI vàlid.', 'error');
-                return;
-            }
-            if (verifyData.error == 'DNI incorrecte') {
-                showAlert('DNI incorrecte. Si us plau, introdueix un DNI vàlid.', 'error');
-                return;
-            }
-            if (verifyData.error == 'Codi de votació no trobat') {
-                showAlert('Codi de votació no trobat. Si us plau, introdueix un codi de votació vàlid.', 'error');
-                return;
-            }
-            showAlert(verifyData.error, 'error');
+            showAlert('Codi de votació no vàlid', 'error');
             return;
         }
         
