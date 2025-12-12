@@ -57,14 +57,14 @@ def init_db():
         )
     ''')
     
-    # Taula de vots
+    # Taula de vots amb dades encriptades
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS vots (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             votacio_id INTEGER NOT NULL,
             opcio_id INTEGER NOT NULL,
-            dni_votant TEXT NOT NULL,
-            nom_votant TEXT NOT NULL,
+            dni_votant BLOB NOT NULL,
+            nom_votant BLOB NOT NULL,
             data_vot TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (votacio_id) REFERENCES votacions(id) ON DELETE CASCADE,
             FOREIGN KEY (opcio_id) REFERENCES opcions(id) ON DELETE CASCADE

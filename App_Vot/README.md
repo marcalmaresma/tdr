@@ -17,15 +17,15 @@ Aplicació web per gestionar votacions amb dos rols: administrador i votant.
 
 ### 1. Instal·lar dependències
 
-```bash
-pip3 install flask
-```
-
-O utilitzant el fitxer `requirements.txt`:
+Utilitzant el fitxer `requirements.txt`:
 
 ```bash
 pip3 install -r requirements.txt
 ```
+
+Això instal·larà:
+- Flask (servidor web)
+- cryptography (encriptació RSA)
 
 ### 2. Inicialitzar la base de dades
 
@@ -106,10 +106,17 @@ App Votació (Part Pràctica)/
 
 ## Notes Importants
 
-- **No s'encripten els vots**: Els vots s'emmagatzemen en text pla a la base de dades
-- **No hi ha validació de DNI**: El sistema accepta qualsevol text com a DNI
+- **Encriptació RSA**: Els DNIs i noms dels votants s'encripten amb clau pública RSA abans de guardar-se
+- **Validació de DNI**: El sistema valida el format i lletra del DNI espanyol
 - **Múltiples vots**: El sistema permet que la mateixa persona voti múltiples vegades (no hi ha restricció implementada)
 - **Codi de votació**: Es genera automàticament i és únic per cada votació
+- **Terminis opcionals**: Es poden configurar terminis per a les votacions
+
+## Encriptació
+
+Les dades dels votants (DNI i nom) s'encripten utilitzant RSA amb una clau pública de 2048+ bits. Només qui tingui la clau privada pot desencriptar aquestes dades.
+
+Consulta [ENCRIPTACIO.md](ENCRIPTACIO.md) per més detalls sobre la implementació de l'encriptació.
 
 ## Desenvolupament
 

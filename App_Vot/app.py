@@ -3,6 +3,7 @@ import sqlite3
 from database import get_db, init_db, generate_votacio_code
 from datetime import datetime
 import os
+from crypto_utils import encrypt_dni, encrypt_nom
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Clau secreta per a sessions
@@ -306,10 +307,19 @@ def get_poll_results(poll_id):
     
     votes = []
     for row in cursor.fetchall():
+        # Les dades estan encriptades, mostrem indicador
+        dni_encrypted = row['dni_votant']
+        nom_encrypted = row['nom_votant']
+        
+        # Mostrar hash o representació de les dades encriptades
+        import hashlib
+        dni_display = f"[Encriptat - {hashlib.sha256(dni_encrypted).hexdigest()[:8]}]" if isinstance(dni_encrypted, bytes) else dni_encrypted
+        nom_display = f"[Encriptat - {hashlib.sha256(nom_encrypted).hexdigest()[:8]}]" if isinstance(nom_encrypted, bytes) else nom_encrypted
+        
         votes.append({
             'id': row['id'],
-            'dni_votant': row['dni_votant'],
-            'nom_votant': row['nom_votant'],
+            'dni_votant': dni_display,
+            'nom_votant': nom_display,
             'opcio': row['text_opcio'],
             'data_vot': row['data_vot']
         })
@@ -466,12 +476,20 @@ def submit_vote():
         conn.close()
         return jsonify({'error': 'Opció no vàlida'}), 400
     
-    # Registrar el vot
+    # Encriptar DNI i nom abans de guardar
+    try:
+        dni_encrypted = encrypt_dni(dni_votant)
+        nom_encrypted = encrypt_nom(nom_votant)
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': f'Error encriptant dades: {str(e)}'}), 500
+    
+    # Registrar el vot amb dades encriptades
     try:
         cursor.execute('''
             INSERT INTO vots (votacio_id, opcio_id, dni_votant, nom_votant)
             VALUES (?, ?, ?, ?)
-        ''', (poll_id, opcio_id, dni_votant, nom_votant))
+        ''', (poll_id, opcio_id, dni_encrypted, nom_encrypted))
         
         conn.commit()
         conn.close()
