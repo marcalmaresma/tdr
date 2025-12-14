@@ -4,22 +4,23 @@ let nomVotant = null;
 
 async function loadPoll() {
     try {
-        const response = await fetch(`/api/voter/poll/${votacioCode}`);
+        dniVotant = sessionStorage.getItem('voter_dni');
+        nomVotant = sessionStorage.getItem('voter_nom');
+        
+        if (!dniVotant || !nomVotant) {
+            showAlert('Dades de votant no trobades. Si us plau, accedeix des del formulari.', 'error');
+            setTimeout(() => {
+                window.location.href = '/voter/login';
+            }, 2000);
+            return;
+        }
+        
+        // Enviar DNI com a query parameter per comprovar si ja ha votat
+        const response = await fetch(`/api/voter/poll/${votacioCode}?dni=${encodeURIComponent(dniVotant)}`);
         const data = await response.json();
         
         if (data.success) {
             pollData = data.poll;
-            dniVotant = sessionStorage.getItem('voter_dni');
-            nomVotant = sessionStorage.getItem('voter_nom');
-            
-            if (!dniVotant || !nomVotant) {
-                showAlert('Dades de votant no trobades. Si us plau, accedeix des del formulari.', 'error');
-                setTimeout(() => {
-                    window.location.href = '/voter/login';
-                }, 2000);
-                return;
-            }
-            
             displayPoll();
         } else {
             showAlert('Votació no trobada', 'error');
@@ -38,6 +39,31 @@ function displayPoll() {
         ${pollData.descripcio ? `<p>${escapeHtml(pollData.descripcio)}</p>` : ''}
         ${pollData.end_time ? `<p style="color: #666;"><strong>Termini:</strong> ${formatDateTime(pollData.end_time)}</p>` : ''}
     `;
+    
+    // Comprovar si ja ha votat
+    if (pollData.has_voted) {
+        formContainer.innerHTML = `
+            <div class="alert alert-error" style="margin-top: 20px;">
+                <strong>Ja has votat!</strong><br>
+                Aquest DNI ja ha emès el seu vot en aquesta votació. No pots tornar a votar.
+            </div>
+            <div style="margin-top: 30px;">
+                <h3 style="color: #555; margin-bottom: 15px;">Opcions de la votació:</h3>
+                <div class="radio-options">
+                    ${pollData.opcions.map(opcio => `
+                        <div class="radio-option" style="background: #f0f0f0; cursor: default; opacity: 0.7;">
+                            <input type="radio" disabled>
+                            <label style="cursor: default;">${escapeHtml(opcio.text)}</label>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            <button onclick="window.location.href='/'" class="btn btn-primary btn-block" style="margin-top: 30px;">
+                Tornar a l'Inici
+            </button>
+        `;
+        return;
+    }
     
     // Comprovar si la votació ha acabat
     if (pollData.is_expired) {
@@ -137,6 +163,15 @@ async function handleVote(e) {
                 setTimeout(() => {
                     window.location.href = '/voter/login';
                 }, 2000);
+            } else if (data.error && data.error.includes('ja ha votat')) {
+                // Si el DNI ja ha votat en aquesta votació
+                showAlert('Aquest DNI ja ha votat en aquesta votació', 'error');
+                sessionStorage.removeItem('voter_dni');
+                sessionStorage.removeItem('voter_nom');
+                sessionStorage.removeItem('voter_codi');
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 3000);
             } else {
                 showAlert(data.error || 'Error registrant el vot', 'error');
             }

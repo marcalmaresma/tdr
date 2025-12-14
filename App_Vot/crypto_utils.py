@@ -76,3 +76,17 @@ def encrypt_nom(nom):
     """
     return encrypt_data(nom)
 
+def hash_dni(dni):
+    """
+    Generar un hash SHA-256 del DNI per poder comprovar duplicats
+    sense necessitat de desencriptar
+    
+    Args:
+        dni (str): DNI a hashear
+        
+    Returns:
+        str: Hash SHA-256 del DNI en format hexadecimal
+    """
+    import hashlib
+    return hashlib.sha256(dni.encode('utf-8')).hexdigest()
+

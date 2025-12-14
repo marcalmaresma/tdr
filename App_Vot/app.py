@@ -4,7 +4,7 @@ from database import get_db, init_db, generate_votacio_code
 from datetime import datetime
 import os
 import hashlib
-from crypto_utils import encrypt_dni, encrypt_nom
+from crypto_utils import encrypt_dni, encrypt_nom, hash_dni
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Clau secreta per a sessions
@@ -447,6 +447,9 @@ def validate_voter_login():
 @app.route('/api/voter/poll/<code>', methods=['GET'])
 def get_poll_by_code(code):
     """Obtenir detalls d'una votació per codi"""
+    # Obtenir DNI del sessionStorage via query parameter
+    dni_votant = request.args.get('dni', '').strip().upper()
+    
     conn = get_db()
     cursor = conn.cursor()
     
@@ -461,6 +464,8 @@ def get_poll_by_code(code):
         conn.close()
         return jsonify({'error': 'Votació no trobada'}), 404
     
+    poll_id = poll['id']
+    
     # Comprovar si la votació ha acabat
     is_expired = False
     end_time = poll['end_time']
@@ -472,12 +477,24 @@ def get_poll_by_code(code):
         except:
             pass
     
+    # Comprovar si el DNI ja ha votat en aquesta votació
+    has_voted = False
+    if dni_votant:
+        dni_hash_value = hash_dni(dni_votant)
+        cursor.execute('''
+            SELECT id FROM vots
+            WHERE votacio_id = ? AND dni_hash = ?
+        ''', (poll_id, dni_hash_value))
+        
+        if cursor.fetchone():
+            has_voted = True
+    
     # Obtenir opcions
     cursor.execute('''
         SELECT id, text_opcio
         FROM opcions
         WHERE votacio_id = ?
-    ''', (poll['id'],))
+    ''', (poll_id,))
     
     opcions = [{'id': row['id'], 'text': row['text_opcio']} for row in cursor.fetchall()]
     
@@ -492,6 +509,7 @@ def get_poll_by_code(code):
             'codi_votacio': poll['codi_votacio'],
             'end_time': poll['end_time'],
             'is_expired': is_expired,
+            'has_voted': has_voted,
             'opcions': opcions
         }
     })
@@ -544,6 +562,22 @@ def submit_vote():
     
     poll_id = poll['id']
     end_time = poll['end_time']
+    
+    # Generar hash del DNI per comprovar si ja ha votat
+    dni_hash_value = hash_dni(dni_votant)
+    
+    # Comprovar si aquest DNI ja ha votat en aquesta votació
+    cursor.execute('''
+        SELECT id FROM vots
+        WHERE votacio_id = ? AND dni_hash = ?
+    ''', (poll_id, dni_hash_value))
+    
+    if cursor.fetchone():
+        conn.close()
+        return jsonify({
+            'error': 'Aquest DNI ja ha votat en aquesta votació',
+            'success': False
+        }), 400
 
     # Si hi ha termini i ja ha passat, no permetre votar
     if end_time:
@@ -575,12 +609,12 @@ def submit_vote():
         conn.close()
         return jsonify({'error': f'Error encriptant dades: {str(e)}'}), 500
     
-    # Registrar el vot amb dades encriptades
+    # Registrar el vot amb dades encriptades i hash del DNI
     try:
         cursor.execute('''
-            INSERT INTO vots (votacio_id, opcio_id, dni_votant, nom_votant)
-            VALUES (?, ?, ?, ?)
-        ''', (poll_id, opcio_id, dni_encrypted, nom_encrypted))
+            INSERT INTO vots (votacio_id, opcio_id, dni_votant, nom_votant, dni_hash)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (poll_id, opcio_id, dni_encrypted, nom_encrypted, dni_hash_value))
         
         conn.commit()
         conn.close()

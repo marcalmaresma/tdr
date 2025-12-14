@@ -65,10 +65,17 @@ def init_db():
             opcio_id INTEGER NOT NULL,
             dni_votant BLOB NOT NULL,
             nom_votant BLOB NOT NULL,
+            dni_hash TEXT NOT NULL,
             data_vot TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (votacio_id) REFERENCES votacions(id) ON DELETE CASCADE,
             FOREIGN KEY (opcio_id) REFERENCES opcions(id) ON DELETE CASCADE
         )
+    ''')
+    
+    # Crear índex únic per evitar que un DNI voti més d'una vegada a la mateixa votació
+    cursor.execute('''
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_vot_unique 
+        ON vots(votacio_id, dni_hash)
     ''')
     
     # Crear administrador per defecte si no existeix
