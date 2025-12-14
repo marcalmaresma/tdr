@@ -3,6 +3,7 @@ import sqlite3
 from database import get_db, init_db, generate_votacio_code
 from datetime import datetime
 import os
+import hashlib
 from crypto_utils import encrypt_dni, encrypt_nom
 
 app = Flask(__name__)
@@ -65,20 +66,36 @@ def admin_login():
     
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute('''
-        SELECT id FROM administradors 
-        WHERE compte = ? AND contrasenya = ?
-    ''', (compte, contrasenya))
     
+    # Obtenir l'admin per compte
+    cursor.execute('SELECT id, contrasenya FROM administradors WHERE compte = ?', (compte,))
     admin = cursor.fetchone()
-    conn.close()
     
-    if admin:
+    if not admin:
+        conn.close()
+        return jsonify({'success': False, 'message': 'Compte o contrasenya incorrectes'}), 401
+    
+    contrasenya_bd = admin['contrasenya']
+    
+    # Generar hash SHA-256 de la contrasenya introduïda
+    contrasenya_hash = hashlib.sha256(contrasenya.encode('utf-8')).hexdigest()
+    
+    print(f"DEBUG Login:")
+    print(f"  Compte: {compte}")
+    print(f"  Contrasenya introduïda: {contrasenya}")
+    print(f"  Hash generat: {contrasenya_hash}")
+    print(f"  Hash a la BD: {contrasenya_bd}")
+    print(f"  Coincideixen? {contrasenya_hash == contrasenya_bd}")
+    
+    # Comparar el hash generat amb el de la BD
+    if contrasenya_hash == contrasenya_bd:
         session['admin_id'] = admin['id']
         session['admin_compte'] = compte
+        conn.close()
         return jsonify({'success': True, 'message': 'Login correcte'})
-    else:
-        return jsonify({'success': False, 'message': 'Compte o contrasenya incorrectes'}), 401
+    
+    conn.close()
+    return jsonify({'success': False, 'message': 'Compte o contrasenya incorrectes'}), 401
 
 @app.route('/api/admin/logout', methods=['POST'])
 def admin_logout():
