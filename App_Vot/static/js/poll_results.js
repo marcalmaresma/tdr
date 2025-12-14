@@ -22,7 +22,36 @@ function displayPollInfo(poll) {
         ${poll.descripcio ? `<p>${escapeHtml(poll.descripcio)}</p>` : ''}
         ${endTimeHtml}
         <div class="code" style="margin: 15px 0;">Codi de Votació: ${escapeHtml(poll.codi_votacio)}</div>
+        <div id="verification-status" style="margin-top: 15px;"></div>
     `;
+}
+
+function displayVerification(verificacio) {
+    const container = document.getElementById('verification-status');
+    
+    if (!verificacio || verificacio.total_vots === 0) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    const { total_vots, vots_verificats, vots_alterats, integritat_completa } = verificacio;
+    
+    if (integritat_completa) {
+        container.innerHTML = `
+            <div class="alert alert-success" style="background: #d4edda; color: #155724; border: 1px solid #c3e6cb; padding: 15px; border-radius: 5px;">
+                <strong>✓ Verificació MD5: Tots els vots són íntegres</strong><br>
+                <small>${vots_verificats} de ${total_vots} vots verificats correctament. Cap vot ha estat alterat.</small>
+            </div>
+        `;
+    } else {
+        container.innerHTML = `
+            <div class="alert alert-error" style="background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; padding: 15px; border-radius: 5px;">
+                <strong>⚠️ Advertència: S'han detectat vots alterats!</strong><br>
+                <small>Vots verificats: ${vots_verificats} | Vots alterats: ${vots_alterats} | Total: ${total_vots}</small><br>
+                <small style="font-weight: bold;">Els resultats poden no ser fiables.</small>
+            </div>
+        `;
+    }
 }
 
 async function loadResults() {
@@ -39,10 +68,13 @@ async function loadResults() {
             // Assegurar que results i votes són arrays
             const results = Array.isArray(data.results) ? data.results : [];
             const votes = Array.isArray(data.votes) ? data.votes : [];
+            const verificacio = data.verificacio || null;
             
             console.log('Resultats rebuts:', results);
             console.log('Nombre de resultats:', results.length);
+            console.log('Verificació:', verificacio);
             
+            displayVerification(verificacio);
             displayResults(results);
             displayVotes(votes);
         } else {
@@ -113,16 +145,21 @@ function displayVotes(votes) {
     
     let html = '<div class="votes-list"><h2>Vots Individuals</h2>';
     html += '<table class="results-table">';
-    html += '<thead><tr><th>Nom</th><th>DNI</th><th>Vot</th><th>Data</th></tr></thead>';
+    html += '<thead><tr><th>Nom</th><th>DNI</th><th>Vot</th><th>Data</th><th>Estat</th></tr></thead>';
     html += '<tbody>';
     
     votes.forEach(vote => {
+        const verificatIcon = vote.verificat ? 
+            '<span style="color: #28a745; font-weight: bold;">✓ Verificat</span>' : 
+            '<span style="color: #dc3545; font-weight: bold;">⚠️ Alterat</span>';
+        
         html += `
-            <tr>
+            <tr style="${vote.verificat ? '' : 'background-color: #fff3cd;'}">
                 <td><strong>${escapeHtml(vote.nom_votant)}</strong></td>
                 <td>${escapeHtml(vote.dni_votant)}</td>
                 <td>${escapeHtml(vote.opcio)}</td>
                 <td><small>${formatDateTime(vote.data_vot)}</small></td>
+                <td>${verificatIcon}</td>
             </tr>
         `;
     });

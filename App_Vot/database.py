@@ -67,6 +67,7 @@ def init_db():
             nom_votant BLOB NOT NULL,
             dni_hash TEXT NOT NULL,
             data_vot TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            md5_hash TEXT NOT NULL,
             FOREIGN KEY (votacio_id) REFERENCES votacions(id) ON DELETE CASCADE,
             FOREIGN KEY (opcio_id) REFERENCES opcions(id) ON DELETE CASCADE
         )

@@ -313,9 +313,10 @@ def get_poll_results(poll_id):
             'num_vots': num_vots
         })
     
-    # Obtenir llista de vots individuals
+    # Obtenir llista de vots individuals i verificar integritat MD5
     cursor.execute('''
-        SELECT v.id, v.dni_votant, v.nom_votant, v.data_vot, o.text_opcio
+        SELECT v.id, v.votacio_id, v.opcio_id, v.dni_hash, v.dni_votant, v.nom_votant, 
+               v.data_vot, v.md5_hash, o.text_opcio
         FROM vots v
         JOIN opcions o ON v.opcio_id = o.id
         WHERE v.votacio_id = ?
@@ -323,13 +324,27 @@ def get_poll_results(poll_id):
     ''', (poll_id,))
     
     votes = []
+    vots_alterats = 0
+    vots_verificats = 0
+    
     for row in cursor.fetchall():
+        # Verificar integritat del vot recalculant el MD5
+        vot_data = f"{row['votacio_id']}:{row['opcio_id']}:{row['dni_hash']}:{row['data_vot']}"
+        md5_calculat = hashlib.md5(vot_data.encode('utf-8')).hexdigest()
+        md5_original = row['md5_hash'] if row['md5_hash'] else ""
+        
+        vot_integre = (md5_calculat == md5_original)
+        
+        if vot_integre:
+            vots_verificats += 1
+        else:
+            vots_alterats += 1
+        
         # Les dades estan encriptades, mostrem indicador
         dni_encrypted = row['dni_votant']
         nom_encrypted = row['nom_votant']
         
         # Mostrar hash o representació de les dades encriptades
-        import hashlib
         dni_display = f"[Encriptat - {hashlib.sha256(dni_encrypted).hexdigest()[:8]}]" if isinstance(dni_encrypted, bytes) else dni_encrypted
         nom_display = f"[Encriptat - {hashlib.sha256(nom_encrypted).hexdigest()[:8]}]" if isinstance(nom_encrypted, bytes) else nom_encrypted
         
@@ -338,15 +353,26 @@ def get_poll_results(poll_id):
             'dni_votant': dni_display,
             'nom_votant': nom_display,
             'opcio': row['text_opcio'],
-            'data_vot': row['data_vot']
+            'data_vot': row['data_vot'],
+            'verificat': vot_integre
         })
     
     conn.close()
     
+    # Determinar estat general de verificació
+    total_vots = vots_verificats + vots_alterats
+    estat_verificacio = {
+        'total_vots': total_vots,
+        'vots_verificats': vots_verificats,
+        'vots_alterats': vots_alterats,
+        'integritat_completa': (vots_alterats == 0 and total_vots > 0)
+    }
+    
     return jsonify({
         'success': True,
         'results': results,
-        'votes': votes
+        'votes': votes,
+        'verificacio': estat_verificacio
     })
 
 @app.route('/api/voter/verify', methods=['POST'])
@@ -609,12 +635,21 @@ def submit_vote():
         conn.close()
         return jsonify({'error': f'Error encriptant dades: {str(e)}'}), 500
     
-    # Registrar el vot amb dades encriptades i hash del DNI
+    # Generar timestamp una sola vegada per assegurar consistència
+    timestamp_vot = datetime.now().isoformat()
+    
+    # Generar MD5 del vot per verificació d'integritat
+    import hashlib
+    # Concatenar dades del vot per generar el hash
+    vot_data = f"{poll_id}:{opcio_id}:{dni_hash_value}:{timestamp_vot}"
+    md5_hash = hashlib.md5(vot_data.encode('utf-8')).hexdigest()
+    
+    # Registrar el vot amb dades encriptades, hash del DNI i MD5 de verificació
     try:
         cursor.execute('''
-            INSERT INTO vots (votacio_id, opcio_id, dni_votant, nom_votant, dni_hash)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (poll_id, opcio_id, dni_encrypted, nom_encrypted, dni_hash_value))
+            INSERT INTO vots (votacio_id, opcio_id, dni_votant, nom_votant, dni_hash, md5_hash, data_vot)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (poll_id, opcio_id, dni_encrypted, nom_encrypted, dni_hash_value, md5_hash, timestamp_vot))
         
         conn.commit()
         conn.close()
