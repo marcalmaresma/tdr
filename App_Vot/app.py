@@ -370,6 +370,80 @@ def verify_votacio_code():
     else:
         return jsonify({'success': True, 'exists': False})
 
+@app.route('/api/voter/validate-login', methods=['POST'])
+def validate_voter_login():
+    """Validar DNI i codi de votació del votant"""
+    data = request.json
+    dni = data.get('dni', '').strip().upper()
+    codi_votacio = data.get('code', '').upper()
+    
+    # Validar que les dades existeixen
+    if not dni or not codi_votacio:
+        return jsonify({
+            'success': False,
+            'error': 'missing_data',
+            'message': 'Falten dades'
+        }), 400
+    
+    # Validar DNI
+    dni_valid = False
+    
+    dnilet = "TRWAGMYFPDXBNJZSQVHLCKE"                  #Assigno les lletres amb la posició concordant amb el nombre que els hi toqui
+    if len(dni) != 9:                                   #Els dnis consten de 9 caràcters, 8 nombres i 1 lletra, per tant si el dni introduit conté un nombre diferent a 9 de caràcters és incorrecte
+        dni_valid = False
+    else:
+        try:
+            if dnilet[int(dni[0:8])%23] == dni[8].upper():       #Calculo la lletra que obtenim del nombre i si coincideix amb la que s'ha introduit és correcte
+                dni_valid = True
+            else:                                         #Si en canvi no coincideix mostro la lletra que correspon al nombre
+                dni_valid = False
+        except (ValueError, IndexError):
+            dni_valid = False
+    # Exemple del teu codi:
+    # a = dni
+    # dni_letters = "TRWAGMYFPDXBNJZSQVHLCKE"
+    # if len(a) == 9:
+    #     try:
+    #         if dni_letters[int(a[0:8])%23] == a[8]:
+    #             dni_valid = True
+    #     except (ValueError, IndexError):
+    #         dni_valid = False
+    
+    # ============================================
+    
+    # Validar codi de votació
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT id FROM votacions WHERE codi_votacio = ?', (codi_votacio,))
+    code_valid = cursor.fetchone() is not None
+    conn.close()
+    
+    # Determinar l'error específic
+    if not dni_valid and not code_valid:
+        return jsonify({
+            'success': False,
+            'error': 'both_invalid',
+            'message': 'DNI i codi de votació incorrectes'
+        }), 400
+    elif not dni_valid:
+        return jsonify({
+            'success': False,
+            'error': 'dni_invalid',
+            'message': 'DNI incorrecte'
+        }), 400
+    elif not code_valid:
+        return jsonify({
+            'success': False,
+            'error': 'code_invalid',
+            'message': 'Codi de votació incorrecte'
+        }), 400
+    
+    # Tot correcte
+    return jsonify({
+        'success': True,
+        'message': 'Validació correcta'
+    })
+
 @app.route('/api/voter/poll/<code>', methods=['GET'])
 def get_poll_by_code(code):
     """Obtenir detalls d'una votació per codi"""

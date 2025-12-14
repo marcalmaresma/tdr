@@ -16,7 +16,7 @@ window.addEventListener('DOMContentLoaded', () => {
 document.getElementById('voter-login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const dni = document.getElementById('dni').value.trim();
+    const dni = document.getElementById('dni').value.trim().toUpperCase();
     const nom = document.getElementById('nom').value.trim();
     const codi_votacio = document.getElementById('codi_votacio').value.trim().toUpperCase();
     
@@ -25,24 +25,46 @@ document.getElementById('voter-login-form').addEventListener('submit', async (e)
         return;
     }
     
-    // Verificar que el codi existeix
+    // Validar DNI i codi de votació
     try {
-        const verifyResponse = await fetch('/api/voter/verify', {
+        const validateResponse = await fetch('/api/voter/validate-login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ code: codi_votacio })
+            body: JSON.stringify({ 
+                dni: dni,
+                code: codi_votacio 
+            })
         });
         
-        const verifyData = await verifyResponse.json();
+        const validateData = await validateResponse.json();
         
-        if (!verifyData.exists) {
-            showAlert('Codi de votació no vàlid', 'error');
+        if (!validateData.success) {
+            // Mostrar error específic segons el tipus
+            if (validateData.error === 'dni_invalid') {
+                showAlert('DNI incorrecte', 'error');
+                // Esborrar només el camp DNI
+                document.getElementById('dni').value = '';
+                document.getElementById('dni').focus();
+            } else if (validateData.error === 'code_invalid') {
+                showAlert('Codi de votació incorrecte', 'error');
+                // Esborrar només el camp de codi
+                document.getElementById('codi_votacio').value = '';
+                document.getElementById('codi_votacio').focus();
+            } else if (validateData.error === 'both_invalid') {
+                showAlert('DNI i codi de votació incorrectes', 'error');
+                // Esborrar ambdós camps
+                document.getElementById('dni').value = '';
+                document.getElementById('codi_votacio').value = '';
+                document.getElementById('dni').focus();
+            } else {
+                showAlert(validateData.message || 'Error de validació', 'error');
+            }
             return;
         }
         
-        // Guardar dades a sessionStorage per usar-les després
+        // Tot correcte, guardar dades a sessionStorage
         sessionStorage.setItem('voter_dni', dni);
         sessionStorage.setItem('voter_nom', nom);
         sessionStorage.setItem('voter_codi', codi_votacio);
