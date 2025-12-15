@@ -34,21 +34,24 @@ function displayVerification(verificacio) {
         return;
     }
     
-    const { total_vots, vots_verificats, vots_alterats, integritat_completa } = verificacio;
+    const { total_vots, vots_verificats, vots_alterats, integritat_completa, cadena_trencada } = verificacio;
     
     if (integritat_completa) {
         container.innerHTML = `
             <div class="alert alert-success" style="background: #d4edda; color: #155724; border: 1px solid #c3e6cb; padding: 15px; border-radius: 5px;">
-                <strong>✓ Verificació MD5: Tots els vots són íntegres</strong><br>
-                <small>${vots_verificats} de ${total_vots} vots verificats correctament. Cap vot ha estat alterat.</small>
+                <strong>✓ Verificació Blockchain: Tots els vots són íntegres</strong><br>
+                <small>${vots_verificats} de ${total_vots} vots verificats correctament.</small><br>
+                <small>✓ Cadena de hash intacta · ✓ Cap vot alterat</small>
             </div>
         `;
     } else {
+        const cadenaMsg = cadena_trencada ? '<br><small style="color: #dc3545;">🔗 CADENA DE HASH TRENCADA - Alteració detectada!</small>' : '';
         container.innerHTML = `
             <div class="alert alert-error" style="background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; padding: 15px; border-radius: 5px;">
-                <strong>⚠️ Advertència: S'han detectat vots alterats!</strong><br>
-                <small>Vots verificats: ${vots_verificats} | Vots alterats: ${vots_alterats} | Total: ${total_vots}</small><br>
-                <small style="font-weight: bold;">Els resultats poden no ser fiables.</small>
+                <strong>⚠️ ALERTA CRÍTICA: S'han detectat vots alterats!</strong><br>
+                <small>Vots verificats: ${vots_verificats} | Vots alterats: ${vots_alterats} | Total: ${total_vots}</small>
+                ${cadenaMsg}
+                <br><small style="font-weight: bold;">⚠️ Els resultats NO són fiables. El sistema ha estat compromès.</small>
             </div>
         `;
     }

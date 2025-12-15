@@ -313,19 +313,21 @@ def get_poll_results(poll_id):
             'num_vots': num_vots
         })
     
-    # Obtenir llista de vots individuals i verificar integritat MD5
+    # Obtenir llista de vots individuals i verificar integritat (MD5 + blockchain)
     cursor.execute('''
         SELECT v.id, v.votacio_id, v.opcio_id, v.dni_hash, v.dni_votant, v.nom_votant, 
-               v.data_vot, v.md5_hash, o.text_opcio
+               v.data_vot, v.md5_hash, v.hash_anterior, v.hash_bloc, o.text_opcio
         FROM vots v
         JOIN opcions o ON v.opcio_id = o.id
         WHERE v.votacio_id = ?
-        ORDER BY v.data_vot DESC
+        ORDER BY v.id ASC
     ''', (poll_id,))
     
     votes = []
     vots_alterats = 0
     vots_verificats = 0
+    cadena_trencada = False
+    hash_anterior_esperat = "0" * 64  # Genesis block
     
     for row in cursor.fetchall():
         # Verificar integritat del vot recalculant el MD5
@@ -333,12 +335,30 @@ def get_poll_results(poll_id):
         md5_calculat = hashlib.md5(vot_data.encode('utf-8')).hexdigest()
         md5_original = row['md5_hash'] if row['md5_hash'] else ""
         
-        vot_integre = (md5_calculat == md5_original)
+        md5_valid = (md5_calculat == md5_original)
+        
+        # Verificar cadena de blockchain
+        hash_anterior_guardat = row['hash_anterior'] if row['hash_anterior'] else ""
+        cadena_valid = (hash_anterior_guardat == hash_anterior_esperat)
+        
+        # Verificar hash de bloc
+        bloc_data = f"{vot_data}:{md5_original}:{hash_anterior_guardat}"
+        hash_bloc_calculat = hashlib.sha256(bloc_data.encode('utf-8')).hexdigest()
+        hash_bloc_guardat = row['hash_bloc'] if row['hash_bloc'] else ""
+        bloc_valid = (hash_bloc_calculat == hash_bloc_guardat)
+        
+        # El vot és íntegre només si TOTS els checks passen
+        vot_integre = md5_valid and cadena_valid and bloc_valid
         
         if vot_integre:
             vots_verificats += 1
         else:
             vots_alterats += 1
+            if not cadena_valid:
+                cadena_trencada = True
+        
+        # Actualitzar hash anterior esperat per al següent vot
+        hash_anterior_esperat = hash_bloc_guardat
         
         # Les dades estan encriptades, mostrem indicador
         dni_encrypted = row['dni_votant']
@@ -365,7 +385,8 @@ def get_poll_results(poll_id):
         'total_vots': total_vots,
         'vots_verificats': vots_verificats,
         'vots_alterats': vots_alterats,
-        'integritat_completa': (vots_alterats == 0 and total_vots > 0)
+        'integritat_completa': (vots_alterats == 0 and total_vots > 0),
+        'cadena_trencada': cadena_trencada
     }
     
     return jsonify({
@@ -425,18 +446,7 @@ def validate_voter_login():
                 dni_valid = False
         except (ValueError, IndexError):
             dni_valid = False
-    # Exemple del teu codi:
-    # a = dni
-    # dni_letters = "TRWAGMYFPDXBNJZSQVHLCKE"
-    # if len(a) == 9:
-    #     try:
-    #         if dni_letters[int(a[0:8])%23] == a[8]:
-    #             dni_valid = True
-    #     except (ValueError, IndexError):
-    #         dni_valid = False
-    
-    # ============================================
-    
+              
     # Validar codi de votació
     conn = get_db()
     cursor = conn.cursor()
@@ -638,18 +648,31 @@ def submit_vote():
     # Generar timestamp una sola vegada per assegurar consistència
     timestamp_vot = datetime.now().isoformat()
     
+    # Obtenir hash del vot anterior (blockchain-like)
+    cursor.execute('''
+        SELECT hash_bloc FROM vots 
+        ORDER BY id DESC 
+        LIMIT 1
+    ''')
+    ultim_vot = cursor.fetchone()
+    hash_anterior = ultim_vot['hash_bloc'] if ultim_vot else "0" * 64  # Genesis block
+    
     # Generar MD5 del vot per verificació d'integritat
     import hashlib
     # Concatenar dades del vot per generar el hash
     vot_data = f"{poll_id}:{opcio_id}:{dni_hash_value}:{timestamp_vot}"
     md5_hash = hashlib.md5(vot_data.encode('utf-8')).hexdigest()
     
-    # Registrar el vot amb dades encriptades, hash del DNI i MD5 de verificació
+    # Generar hash de bloc (inclou hash anterior per crear cadena)
+    bloc_data = f"{vot_data}:{md5_hash}:{hash_anterior}"
+    hash_bloc = hashlib.sha256(bloc_data.encode('utf-8')).hexdigest()
+    
+    # Registrar el vot amb dades encriptades, hash del DNI, MD5 i cadena de hash
     try:
         cursor.execute('''
-            INSERT INTO vots (votacio_id, opcio_id, dni_votant, nom_votant, dni_hash, md5_hash, data_vot)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (poll_id, opcio_id, dni_encrypted, nom_encrypted, dni_hash_value, md5_hash, timestamp_vot))
+            INSERT INTO vots (votacio_id, opcio_id, dni_votant, nom_votant, dni_hash, md5_hash, data_vot, hash_anterior, hash_bloc)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (poll_id, opcio_id, dni_encrypted, nom_encrypted, dni_hash_value, md5_hash, timestamp_vot, hash_anterior, hash_bloc))
         
         conn.commit()
         conn.close()

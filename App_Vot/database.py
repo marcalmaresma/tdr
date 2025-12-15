@@ -57,7 +57,7 @@ def init_db():
         )
     ''')
     
-    # Taula de vots amb dades encriptades
+    # Taula de vots amb dades encriptades i cadena de hash (blockchain-like)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS vots (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,6 +68,8 @@ def init_db():
             dni_hash TEXT NOT NULL,
             data_vot TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             md5_hash TEXT NOT NULL,
+            hash_anterior TEXT NOT NULL,
+            hash_bloc TEXT NOT NULL,
             FOREIGN KEY (votacio_id) REFERENCES votacions(id) ON DELETE CASCADE,
             FOREIGN KEY (opcio_id) REFERENCES opcions(id) ON DELETE CASCADE
         )
