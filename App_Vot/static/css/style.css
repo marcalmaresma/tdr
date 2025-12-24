@@ -75,6 +75,7 @@ label {
 
 input[type="text"],
 input[type="password"],
+input[type="datetime-local"],
 textarea {
     width: 100%;
     padding: 12px;
@@ -86,6 +87,7 @@ textarea {
 
 input[type="text"]:focus,
 input[type="password"]:focus,
+input[type="datetime-local"]:focus,
 textarea:focus {
     outline: none;
     border-color: #667eea;
@@ -377,5 +379,242 @@ textarea {
 .empty-state p {
     font-size: 1.2em;
     margin-top: 10px;
+}
+
+/* Capçalera admin amb botó tancar sessió */
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 15px;
+}
+
+.admin-header h1 {
+    margin: 0;
+}
+
+/* ====================================== */
+/* MEDIA QUERIES PER A DISPOSITIUS MÒBILS */
+/* ====================================== */
+
+@media screen and (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        padding: 20px;
+        border-radius: 10px;
+    }
+
+    .header {
+        padding: 12px 15px;
+        margin: -20px -20px 20px -20px;
+        font-size: 0.9em;
+    }
+
+    h1 {
+        font-size: 1.5em;
+        margin-bottom: 20px;
+    }
+
+    h2 {
+        font-size: 1.2em;
+        margin-bottom: 15px;
+    }
+
+    /* Capçalera admin responsive */
+    .admin-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .admin-header h1 {
+        font-size: 1.4em;
+        text-align: center;
+    }
+
+    .admin-header .btn {
+        width: 100%;
+    }
+
+    /* Role cards en vertical per a mòbils */
+    .role-selection {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .role-card {
+        padding: 25px;
+        width: 100%;
+    }
+
+    .role-card h3 {
+        font-size: 1.3em;
+    }
+
+    .role-card p {
+        font-size: 0.95em;
+    }
+
+    /* Botons més petits i apilats */
+    .btn {
+        padding: 12px 20px;
+        font-size: 15px;
+    }
+
+    .poll-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .poll-actions .btn {
+        width: 100%;
+    }
+
+    /* Formularis */
+    input[type="text"],
+    input[type="password"],
+    input[type="datetime-local"],
+    textarea {
+        font-size: 16px; /* Evita zoom automàtic a iOS */
+    }
+
+    /* Taules responsives */
+    .results-table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .results-table th,
+    .results-table td {
+        padding: 10px 8px;
+        font-size: 0.9em;
+    }
+
+    /* Items de polls */
+    .poll-item {
+        padding: 15px;
+    }
+
+    .poll-item h3 {
+        font-size: 1.1em;
+    }
+
+    .poll-item p {
+        font-size: 0.9em;
+    }
+
+    /* Opcions de votació */
+    .radio-option {
+        padding: 12px;
+    }
+
+    .radio-option label {
+        font-size: 0.95em;
+    }
+
+    /* Options list per crear polls */
+    .option-item {
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+    }
+
+    .option-item input[type="text"] {
+        width: 100%;
+    }
+
+    .option-item .btn-danger {
+        width: 100%;
+    }
+
+    /* Back link més petit */
+    .back-link {
+        font-size: 1em;
+        margin-bottom: 15px;
+    }
+
+    /* Vote items */
+    .vote-item {
+        padding: 12px;
+        font-size: 0.9em;
+    }
+
+    /* Alerts */
+    .alert {
+        padding: 12px;
+        font-size: 0.9em;
+    }
+
+    /* Info message per votació expirada */
+    #info-message {
+        font-size: 0.9em;
+    }
+
+    #poll-info p {
+        font-size: 0.95em;
+    }
+
+    /* Codi de votació responsive */
+    .code {
+        font-size: 0.9em;
+        padding: 8px 12px;
+        word-break: break-all;
+    }
+
+    /* Verificació status més petit */
+    #verification-status .alert {
+        font-size: 0.85em;
+        padding: 10px;
+    }
+
+    #verification-status small {
+        font-size: 0.85em;
+    }
+}
+
+/* Per a pantalles molt petites (menors de 480px) */
+@media screen and (max-width: 480px) {
+    .container {
+        padding: 15px;
+    }
+
+    .header {
+        font-size: 0.85em;
+        padding: 10px;
+        margin: -15px -15px 15px -15px;
+    }
+
+    h1 {
+        font-size: 1.3em;
+    }
+
+    h2 {
+        font-size: 1.1em;
+    }
+
+    .role-card {
+        padding: 20px;
+    }
+
+    .btn {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+
+    .results-table th,
+    .results-table td {
+        padding: 8px 5px;
+        font-size: 0.85em;
+    }
+
+    .poll-item .code {
+        font-size: 0.9em;
+        padding: 4px 8px;
+    }
 }
 
