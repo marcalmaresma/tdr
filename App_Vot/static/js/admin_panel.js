@@ -36,8 +36,16 @@ function displayPolls(polls) {
         item.innerHTML = `
             <h3>${escapeHtml(poll.titol)}</h3>
             ${poll.descripcio ? `<p>${escapeHtml(poll.descripcio)}</p>` : ''}
-            <div class="code">Codi: ${escapeHtml(poll.codi_votacio)}</div>
-            ${endTime}
+            <div class="code-qr-container">
+                <div class="code-text-section">
+                    <div class="code">Codi: ${escapeHtml(poll.codi_votacio)}</div>
+                    ${endTime}
+                </div>
+                <div class="qr-section">
+                    <img src="/api/qr/${escapeHtml(poll.codi_votacio)}" alt="Codi QR" class="qr-code" title="Escaneja per accedir directament">
+                    <small style="color: #666; text-align: center; display: block; margin-top: 5px;">Escaneja per votar</small>
+                </div>
+            </div>
             <div class="poll-actions">
                 <button onclick="viewResults(${poll.id})" class="btn btn-primary">
                     Veure Resultats

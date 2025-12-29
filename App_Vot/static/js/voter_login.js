@@ -1,5 +1,27 @@
 // Comprovar si hi ha hagut un error de DNI i mostrar missatge
+// També omplir automàticament el codi si ve del paràmetre URL
 window.addEventListener('DOMContentLoaded', () => {
+    // Comprovar si ve d'un QR (paràmetre 'code' a la URL)
+    const urlParams = new URLSearchParams(window.location.search);
+    const codeFromUrl = urlParams.get('code');
+    
+    if (codeFromUrl) {
+        const codiInput = document.getElementById('codi_votacio');
+        if (codiInput) {
+            codiInput.value = codeFromUrl.toUpperCase();
+            // Focus al camp DNI si el codi ja està omplert
+            const dniInput = document.getElementById('dni');
+            if (dniInput) {
+                dniInput.focus();
+            }
+        }
+        // Mostrar missatge informatiu
+        showAlert('Codi de votació carregat des del QR', 'success');
+        setTimeout(() => {
+            document.getElementById('alert-container').innerHTML = '';
+        }, 3000);
+    }
+    
     if (sessionStorage.getItem('dni_error') === 'true') {
         showAlert('DNI incorrecte. Si us plau, introdueix un DNI vàlid.', 'error');
         // Esborrar el camp DNI

@@ -1,10 +1,12 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file
 import sqlite3
 from database import get_db, init_db, generate_votacio_code
 from datetime import datetime
 import os
 import hashlib
 from crypto_utils import encrypt_dni, encrypt_nom, hash_dni
+import qrcode
+from io import BytesIO
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Clau secreta per a sessions
@@ -682,6 +684,35 @@ def submit_vote():
     except Exception as e:
         conn.rollback()
         conn.close()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/qr/<codi_votacio>')
+def generate_qr(codi_votacio):
+    """Generar codi QR per a un codi de votació"""
+    try:
+        # URL que portarà al login de votant amb el codi preomplert
+        url = f"https://www.sistemavot.cat/voter/login?code={codi_votacio}"
+        
+        # Crear objecte QR
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(url)
+        qr.make(fit=True)
+        
+        # Crear imatge
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Guardar a BytesIO
+        buf = BytesIO()
+        img.save(buf, format='PNG')
+        buf.seek(0)
+        
+        return send_file(buf, mimetype='image/png', as_attachment=False, download_name=f'qr_{codi_votacio}.png')
+    except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
