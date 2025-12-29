@@ -648,14 +648,15 @@ def submit_vote():
     # Generar timestamp una sola vegada per assegurar consistència
     timestamp_vot = datetime.now().isoformat()
     
-    # Obtenir hash del vot anterior (blockchain-like)
+    # Obtenir hash del vot anterior dins de la mateixa votació (blockchain per votació)
     cursor.execute('''
         SELECT hash_bloc FROM vots 
+        WHERE votacio_id = ?
         ORDER BY id DESC 
         LIMIT 1
-    ''')
+    ''', (poll_id,))
     ultim_vot = cursor.fetchone()
-    hash_anterior = ultim_vot['hash_bloc'] if ultim_vot else "0" * 64  # Genesis block
+    hash_anterior = ultim_vot['hash_bloc'] if ultim_vot else "0" * 64  # Genesis block per aquesta votació
     
     # Generar MD5 del vot per verificació d'integritat
     import hashlib
