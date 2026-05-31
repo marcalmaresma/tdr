@@ -82,12 +82,12 @@ def init_db():
     ''')
     
     # Crear administrador per defecte si no existeix
-    cursor.execute('SELECT * FROM administradors WHERE compte = ?', ('MarçalMaresma',))
+    cursor.execute('SELECT * FROM administradors WHERE compte = ?', ('admin',))
     if not cursor.fetchone():
         cursor.execute('''
             INSERT INTO administradors (compte, contrasenya)
             VALUES (?, ?)
-        ''', ('MarçalMaresma', '12345678'))
+        ''', ('admin', '12345678'))
     
     conn.commit()
     conn.close()

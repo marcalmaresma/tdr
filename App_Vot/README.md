@@ -48,7 +48,7 @@ L'aplicació estarà disponible a: `http://localhost:5000`
 ### Administrador
 
 **Credencials per defecte:**
-- Compte: `MarçalMaresma`
+- Compte: `admin`
 - Contrasenya: `12345678`
 
 **Funcions disponibles:**

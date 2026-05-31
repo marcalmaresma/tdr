@@ -126,7 +126,7 @@ App Votació (Part Pràctica)/
 ## 5. Seguretat i Validacions
 
 ### Administrador
-- Contrasenya hardcoded: "12345678" per compte "MarçalMaresma"
+- Contrasenya hardcoded: "12345678" per compte "admin"
 - Sessions amb Flask sessions
 - Verificació de sessió en rutes protegides
 

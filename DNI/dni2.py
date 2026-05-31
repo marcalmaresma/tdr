@@ -1,4 +1,3 @@
-print("Fet per Marçal Maresma\n")
 a = input("Introdueix el teu DNI per verificar la lletra:\n")
 dni = "TRWAGMYFPDXBNJZSQVHLCKE"                  #Assigno les lletres amb la posició concordant amb el nombre que els hi toqui
 if len(a) != 9:                                   #Els dnis consten de 9 caràcters, 8 nombres i 1 lletra, per tant si el dni introduit conté un nombre diferent a 9 de caràcters és incorrecte

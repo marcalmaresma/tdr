@@ -137,5 +137,5 @@ qr = qrcode.QRCode(
 ---
 
 **Data d'implementació**: Desembre 2025  
-**Autor**: Sistema de Votacions - TDR Marçal Maresma Roig
+**Autor**: Sistema de Votacions - TDR
 
